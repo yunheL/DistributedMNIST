@@ -33,6 +33,10 @@ tf.logging.set_verbosity(tf.logging.INFO)
 
 FLAGS = tf.app.flags.FLAGS
 
+#yunhe
+tf.app.flags.DEFINE_float('zero_ratio', 0.1,
+                          'zero out this percent of gradient.')
+
 tf.app.flags.DEFINE_boolean('worker_times_cdf_method', False, 'Track worker times cdf')
 tf.app.flags.DEFINE_boolean('interval_method', False, 'Use the interval method')
 tf.app.flags.DEFINE_boolean('should_summarize', False, 'Whether Chief should write summaries.')
@@ -97,7 +101,8 @@ RMSPROP_DECAY = 0.9                # Decay term for RMSProp.
 RMSPROP_MOMENTUM = 0.9             # Momentum in RMSProp.
 RMSPROP_EPSILON = 1.0              # Epsilon term for RMSProp.
 
-def train(target, dataset, cluster_spec):
+#yunhe
+def train(target, dataset, cluster_spec, zero_ratio):
 
   """Train Inception on a dataset for a number of steps."""
   # Number of workers and parameter servers are infered from the workers and ps
@@ -274,7 +279,8 @@ def train(target, dataset, cluster_spec):
           timeout_client.broadcast_worker_dequeued_token(cur_iteration)
 
         start_time = time.time()
-        feed_dict = mnist.fill_feed_dict(dataset, images, labels, FLAGS.batch_size)
+        #yunhe
+        feed_dict = mnist.fill_feed_dict(dataset, images, labels, FLAGS.batch_size, zero_ratio)
 
         run_options = tf.RunOptions()
         run_metadata = tf.RunMetadata()

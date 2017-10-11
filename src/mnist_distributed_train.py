@@ -12,6 +12,9 @@ import mnist_data
 
 FLAGS = tf.app.flags.FLAGS
 
+#yunhe
+#tf.app.flags.DEFINE_float('zero_ratio', 0.2, 'zero out this percent of gradient.')
+
 def main(unused_args):
   assert FLAGS.job_name in ['ps', 'worker'], 'job_name must be ps or worker'
 
@@ -36,13 +39,15 @@ def main(unused_args):
   else:
     n_workers = len(worker_hosts)
     worker_id = int(FLAGS.task_id)
+    # yunhe
+    zero_ratio = float(FLAGS.zero_ratio) 
     dataset = mnist_data.load_mnist(worker_id=worker_id, n_workers=n_workers)
     # Only the chief checks for or creates train_dir.
     if FLAGS.task_id == 0:
       if not tf.gfile.Exists(FLAGS.train_dir):
         tf.gfile.MakeDirs(FLAGS.train_dir)
 
-    distributed_train.train(server.target, dataset.train, cluster_spec)
+    distributed_train.train(server.target, dataset.train, cluster_spec, zero_ratio)
 
 if __name__ == '__main__':
   tf.logging.set_verbosity(tf.logging.DEBUG)

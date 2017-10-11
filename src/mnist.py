@@ -19,6 +19,7 @@ from __future__ import print_function
 
 import math
 
+import pdb
 import tensorflow as tf
 import numpy as np
 from tensorflow.python.ops import logging_ops
@@ -50,7 +51,7 @@ def placeholder_inputs(batch_size):
   labels_placeholder = tf.placeholder(tf.int64, shape=(batch_size,))
   return images_placeholder, labels_placeholder
 
-def fill_feed_dict(data_set, images_pl, labels_pl, batch_size):
+def fill_feed_dict(data_set, images_pl, labels_pl, batch_size, zero_ratio):
   """Fills the feed_dict for training the given step.
   A feed_dict takes the form of:
   feed_dict = {
@@ -67,10 +68,66 @@ def fill_feed_dict(data_set, images_pl, labels_pl, batch_size):
   # Create the feed_dict for the placeholders filled with the next
   # `batch size` examples.
   images_feed, labels_feed = data_set.next_batch(batch_size)
+ 
+  #yunhe 
+  with open('/efs/pre', 'w') as o:
+      # print shape
+      print("zero_ratio:", zero_ratio, file=o)
+      print("=== shapes ===\n", file=o)
+      print("=> image", file=o)
+      print("image_pl:", images_pl.get_shape(), "image_feed:", images_feed.shape, file=o)
+      print("=> labels", file=o)
+      print("labels_pl:", labels_pl.get_shape(), "labels_feed:", labels_feed.shape, file=o)
+
+      print("\n=== value ===\n", file=o)
+      print("=> image", file=o)
+      print(images_feed[0,:,:,:], file=o)
+      print("=> labels", file=o)
+      print(labels_feed, file=o)
+
+  # use zero_ratio * 28 here. if zero_ratio = 1, then zero_columsn = 28. As the indexing
+  # is [min, max), so 0:28 is actually [0:28), 28 is not included, not index out of bound.
+  zero_rows = int(zero_ratio * 28)
+
+  # shuffle
+  perm_rows = np.arange(28)
+  np.random.shuffle(perm_rows)
+  row_zeroing_index = perm_rows[0:zero_rows] 
+
+  #zero out inputs
+  images_feed[:,row_zeroing_index,:,:] = 0.0
+
+  with open('/efs/post', 'w') as f:
+      # print shape
+      print("=== shapes ===\n", file=f)
+      print("=> image", file=f)
+      print("image_pl:", images_pl.get_shape(), "image_feed:", images_feed.shape, file=f)
+      print("=> labels", file=f)
+      print("labels_pl:", labels_pl.get_shape(), "labels_feed:", labels_feed.shape, file=f)
+
+      print("\n=== value ===\n", file=f)
+      print("=> image", file=f)
+      print(images_feed[0,:,:,:], file=f)
+      print("=> labels", file=f)
+      print(labels_feed, file=f)
+
   feed_dict = {
       images_pl: images_feed,
       labels_pl: labels_feed,
   }
+
+  # pdb.set_trace()
+  # get_shape is a tf function. tensor.get_shape()
+  # .shape is numpy, ndarray.shape.
+      
+      # print value
+#      With tf.Session():
+#              print("=== value ===\n", file=o)
+#              print("=> image", file=o)
+#              print(image_pl.eval(), file=o)
+#              print("=> labels", file=o)
+#              print(labels_pl.eval(), file=o)
+
   return feed_dict
 
 def inference(images, train=True):

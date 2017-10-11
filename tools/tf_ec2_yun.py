@@ -29,7 +29,7 @@ cfg = Cfg({
 
     # Cluster topology
     "n_masters" : 1,                      # Should always be 1
-    "n_workers" : 4,
+    "n_workers" : 1,
     "n_ps" : 1,
     "n_evaluators" : 1,                   # Continually validates the model on the validation data
     "num_replicas_to_aggregate" : "3",
@@ -100,7 +100,10 @@ cfg = Cfg({
     [
 #         '''hostname >&2 && python -c 'import os; print os.getcwd(), os.listdir()' >&2'''
         "python src/mnist_distributed_train.py "
+        "--zero_ratio=0.3 "
         "--batch_size=%(batch_size)s "
+        # see which rates are actually being used. as these parameters are also defined in
+        # distributed_train.py
         "--initial_learning_rate=%(initial_learning_rate)s "
         "--learning_rate_decay_factor=%(learning_rate_decay_factor)s "
         "--num_epochs_per_decay=%(num_epochs_per_decay)s "
@@ -434,11 +437,11 @@ def tf_ec2_run(argv, configuration):
         idle_instances = get_idle_instances()
 
         # Clear the nfs
-        #instances_string = ",".join([x.instance_id for x in idle_instances])
-        #clear_outdir_argv = ["python", "inception_ec2.py", instances_string, "sudo rm -rf %s" % configuration["base_out_dir"]]
-        #run_command(clear_outdir_argv, quiet=True)
-        #make_outdir_argv = ["python", "inception_ec2.py", instances_string, "mkdir %s" % configuration["base_out_dir"]]
-        #run_command(make_outdir_argv, quiet=True)
+#        instances_string = ",".join([x.instance_id for x in idle_instances])
+#        clear_outdir_argv = ["python", "inception_ec2.py", instances_string, "sudo rm -rf %s" % configuration["base_out_dir"]]
+#        run_command(clear_outdir_argv, quiet=True)
+#        make_outdir_argv = ["python", "inception_ec2.py", instances_string, "mkdir %s" % configuration["base_out_dir"]]
+#        run_command(make_outdir_argv, quiet=True)
 
         # Assign instances for worker/ps/etc
         instance_type_to_instance_map = summarize_instances(idle_instances)
